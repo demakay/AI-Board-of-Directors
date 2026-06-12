@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Board of Directors — Executive Boardroom</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ivory:#faf8f3; --paper:#ffffff; --navy:#1b2a4a; --navy2:#2e4368;
+    --gold:#b08d3e; --gold-l:#e7d9b8; --ink:#26303f; --mut:#6b7585;
+    --line:#e3ddd0; --green:#2e7d4f; --red:#b3402e; --amber:#c07b1f;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--ivory); color:var(--ink); font:14px/1.55 "Segoe UI",system-ui,sans-serif; }
+  h1,h2,h3,.serif { font-family:Georgia,"Times New Roman",serif; color:var(--navy); }
+
+  header.bar { background:var(--navy); color:#f2ecdd; padding:16px 24px; display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  header.bar h1 { color:#f2ecdd; font-size:21px; letter-spacing:2.5px; }
+  header.bar .sub { color:#c9bf9f; font-size:12px; letter-spacing:1px; }
+
+  .roster-strip { background:#22345a; padding:8px 24px; display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:3px 11px 3px 4px; }
+  .chip .av { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; }
+  .chip .nm { color:#ece5d2; font-size:11.5px; }
+  .chip .rl { color:#a8a06f; font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; }
+
+  .wrap { display:grid; grid-template-columns:400px 1fr; gap:20px; padding:20px 24px; max-width:1480px; margin:0 auto; }
+  @media (max-width:980px){ .wrap{grid-template-columns:1fr;} }
+
+  .panel { background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .panel h2 { font-size:13px; letter-spacing:1.8px; text-transform:uppercase; border-bottom:2px solid var(--gold); padding-bottom:7px; margin-bottom:13px; }
+  label.fl { display:block; font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--mut); margin:11px 0 4px; }
+  input[type=text], input[type=password], textarea, select { width:100%; border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:13px/1.5 inherit; background:#fffdf9; color:var(--ink); }
+  textarea { resize:vertical; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--gold-l); border-color:var(--gold); }
+
+  .dials { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .dial { background:#f6f2e9; border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
+  .dial .dl { font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--mut); }
+  .dial .dv { font-size:13px; font-weight:600; color:var(--navy); }
+  .dial input[type=range]{ width:100%; accent-color:var(--gold); }
+  .dial select, .dial input[type=text] { margin-top:4px; padding:5px 8px; font-size:12.5px; }
+
+  .assump-row { display:flex; gap:6px; margin-bottom:6px; }
+  .assump-row input { flex:1; }
+  .xbtn { border:1px solid var(--line); background:#fff; color:var(--red); border-radius:6px; width:30px; cursor:pointer; font-size:15px; }
+  .addbtn { border:1px dashed var(--gold); background:#fdf9ef; color:var(--gold); border-radius:6px; padding:6px 12px; cursor:pointer; font-size:12.5px; width:100%; margin-top:2px; }
+
+  .runrow { display:flex; gap:9px; margin-top:16px; }
+  .btn { flex:1; border:none; border-radius:7px; padding:11px 10px; font-size:13px; font-weight:600; cursor:pointer; letter-spacing:.4px; }
+  .btn.primary { background:var(--navy); color:#f4eeda; }
+  .btn.primary:hover { background:var(--navy2); }
+  .btn.gold { background:var(--gold); color:#fff; }
+  .btn.gold:hover { filter:brightness(1.07); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+
+  .stale { display:none; margin-top:11px; background:#fdf3e2; border:1px solid #e8c98a; color:#8a6516; border-radius:7px; padding:8px 11px; font-size:12.5px; }
+  .stale.show { display:block; }
+
+  .scen-mgr { display:flex; gap:6px; margin-bottom:4px; }
+  .scen-mgr select { flex:1; }
+  .mini { border:1px solid var(--line); background:#fff; border-radius:6px; padding:0 10px; cursor:pointer; font-size:12px; color:var(--navy); }
+  .mini:hover { border-color:var(--gold); }
+
+  /* Engine settings */
+  .engine { background:#f3f0e7; border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:15px; }
+  .engine h2 { font-size:12px; letter-spacing:1.6px; text-transform:uppercase; color:var(--navy); margin-bottom:8px; border-bottom:1px solid var(--gold-l); padding-bottom:5px; }
+  .engine .modebtns { display:flex; gap:7px; }
+  .modebtn { flex:1; border:1px solid var(--line); background:#fff; border-radius:7px; padding:8px 6px; cursor:pointer; font-size:12px; color:var(--mut); text-align:center; }
+  .modebtn.active { border-color:var(--gold); background:#fdf8ec; color:var(--navy); font-weight:700; }
+  .keynote { font-size:11px; color:var(--mut); margin-top:7px; }
+
+  /* Results */
+  .status { font-size:12.5px; color:var(--mut); padding:9px 13px; background:#f4f0e6; border-radius:7px; margin-bottom:14px; display:none; }
+  .status.show { display:block; }
+  .phase-tag { display:inline-block; background:var(--navy); color:#ecdfb9; font-size:10px; letter-spacing:1.2px; padding:2px 9px; border-radius:3px; text-transform:uppercase; margin-bottom:8px; }
+
+  .members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:13px; }
+  .mcard { background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--mc,#888); border-radius:9px; padding:14px 15px; }
+  .mcard .mhead { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .mcard .av { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; flex:none; }
+  .mcard .mname { font-weight:700; font-size:14px; color:var(--navy); font-family:Georgia,serif; }
+  .mcard .mrole { font-size:10.5px; color:var(--mut); text-transform:uppercase; letter-spacing:.6px; }
+  .mcard .reaction { font-size:13px; font-style:italic; color:#3a4456; border-left:3px solid var(--gold-l); padding-left:9px; margin-bottom:9px; }
+  .klist { margin:7px 0 0; }
+  .klist .kt { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--mut); }
+  .klist ul { margin:3px 0 0 16px; font-size:12.5px; }
+  .klist li { margin-bottom:2px; }
+  .conf { margin-top:10px; }
+  .conf .bar { height:6px; background:#eee7d8; border-radius:3px; overflow:hidden; }
+  .conf .fill { height:100%; background:linear-gradient(90deg,var(--gold),#8a6d2b); }
+  .conf .ct { font-size:10.5px; color:var(--mut); margin-top:3px; }
+  .skel { color:var(--mut); font-style:italic; font-size:12.5px; }
+
+  .section { background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:17px 19px; margin-top:15px; }
+  .section h3 { font-size:14px; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:10px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .two-col{grid-template-columns:1fr;} }
+  .blk .kt { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--gold); margin-top:8px; }
+  .blk ul { margin:3px 0 0 17px; font-size:13px; }
+  .blk p { font-size:13px; margin-top:3px; }
+
+  .chair { border:2px solid var(--gold); background:linear-gradient(180deg,#fffdf6,#fbf6e8); }
+  .scores { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; margin:12px 0; }
+  @media (max-width:760px){ .scores{grid-template-columns:repeat(2,1fr);} }
+  .score { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; text-align:center; }
+  .score .sv { font-family:Georgia,serif; font-size:24px; font-weight:700; color:var(--navy); }
+  .score .sl { font-size:9.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--mut); }
+  .score .sbar { height:5px; background:#efe9da; border-radius:3px; margin-top:6px; overflow:hidden; }
+  .score .sfill { height:100%; }
+  .verdict { background:var(--navy); color:#f3eedb; border-radius:8px; padding:13px 16px; font-family:Georgia,serif; font-size:15px; margin:10px 0; }
+  .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:11px; margin-top:11px; }
+  @media (max-width:760px){ .plans{grid-template-columns:1fr;} }
+  .plan { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:12.5px; }
+  .plan .pt { font-weight:700; color:var(--gold); font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; margin-bottom:4px; }
+
+  .empty { text-align:center; padding:70px 20px; color:var(--mut); }
+  .empty .seal { width:74px; height:74px; border:2px solid var(--gold); border-radius:50%; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-family:Georgia,serif; font-size:25px; color:var(--gold); }
+  .err { background:#fbeae6; border:1px solid #e3b1a5; color:#7c2d1d; border-radius:8px; padding:11px 14px; font-size:13px; margin-bottom:13px; display:none; }
+  .err.show { display:block; }
+  .foot-note { font-size:11px; color:var(--mut); margin-top:14px; font-style:italic; }
+  .printbtn { margin-top:10px; width:100%; }
+
+  /* Manual exchange modal */
+  .modal-bg { position:fixed; inset:0; background:rgba(20,28,48,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:18px; }
+  .modal-bg.show { display:flex; }
+  .modal { background:var(--paper); border-radius:12px; max-width:760px; width:100%; max-height:90vh; overflow:auto; padding:22px 24px; border-top:5px solid var(--gold); }
+  .modal h3 { margin-bottom:6px; }
+  .modal .steps { font-size:12.5px; color:var(--mut); margin-bottom:12px; }
+  .modal textarea { font-family:ui-monospace,Consolas,monospace; font-size:11.5px; }
+  .modal .mrow { display:flex; gap:9px; margin-top:12px; }
+
+  @media print {
+    .wrap { grid-template-columns:1fr; }
+    header.bar, .roster-strip { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .panel, .engine, .runrow, .stale, .status, .err, .printbtn { display:none !important; }
+    body { background:#fff; }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>AI BOARD OF DIRECTORS</h1>
+  <span class="sub">EXECUTIVE HEAD IN THE CHAIR-SEAT · REPORTING CURRENCY: USD $ · GLOBAL MANDATE · CONVENED 10 JUNE 2026</span>
+</header>
+<div class="roster-strip" id="rosterStrip"></div>
+
+<div class="wrap">
+  <!-- LEFT -->
+  <div>
+    <div class="engine">
+      <h2>Board Engine</h2>
+      <div class="modebtns">
+        <div class="modebtn" id="modeApi">🔑 Claude API key</div>
+        <div class="modebtn" id="modeManual">📋 Offline copy / paste</div>
+      </div>
+      <div id="apiFields" style="display:none">
+        <label class="fl">Anthropic API key</label>
+        <input type="password" id="sKey" placeholder="sk-ant-…">
+        <label class="fl">Model</label>
+        <select id="sModel">
+          <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 (recommended)</option>
+          <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (faster, cheaper)</option>
+          <option value="claude-opus-4-8">Claude Opus 4.8 (deepest)</option>
+        </select>
+        <div class="keynote">Key is stored only in this browser (localStorage) and sent only to api.anthropic.com. Get a key at console.anthropic.com. <b>Never embed a key in a published copy of this file.</b></div>
+      </div>
+      <div id="manualNote" class="keynote" style="display:none">No key needed. The tool composes the Board's instructions; you copy them into any capable AI chat (Claude, etc.), paste the JSON reply back, and the boardroom renders it. Works fully offline except the AI chat itself.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Scenario Submission</h2>
+      <div class="scen-mgr">
+        <select id="scenSelect" title="Saved scenarios"></select>
+        <button class="mini" id="newScen">＋ New</button>
+        <button class="mini" id="delScen">🗑</button>
+      </div>
+
+      <label class="fl">Decision Title</label>
+      <input type="text" id="fTitle" placeholder="e.g. Expand distribution into the US and UK markets">
+      <label class="fl">The Situation &amp; Decision</label>
+      <textarea id="fDesc" rows="5" placeholder="Describe the decision the Board must review: background, the options on the table, what's at stake…"></textarea>
+      <label class="fl">Objectives (what success looks like)</label>
+      <textarea id="fObj" rows="2" placeholder="e.g. $2M ARR from international clients within 24 months"></textarea>
+      <label class="fl">Constraints</label>
+      <textarea id="fCon" rows="2" placeholder="e.g. $300k expansion budget; team of 6; Canadian regulatory base"></textarea>
+      <label class="fl">Executive Context (applies to every scenario)</label>
+      <textarea id="fCtx" rows="2"></textarea>
+    </div>
+
+    <div class="panel" style="margin-top:15px">
+      <h2>Live Assumptions</h2>
+      <div class="dials">
+        <div class="dial">
+          <div class="dl">Time Horizon</div>
+          <input type="range" id="dHorizon" min="1" max="25" value="5">
+          <div class="dv"><span id="dHorizonV">5</span> years</div>
+        </div>
+        <div class="dial">
+          <div class="dl">Risk Tolerance</div>
+          <select id="dRisk">
+            <option>Conservative</option>
+            <option selected>Balanced</option>
+            <option>Aggressive</option>
+          </select>
+        </div>
+        <div class="dial">
+          <div class="dl">Capital at Stake (USD)</div>
+          <input type="text" id="dCapital" placeholder="e.g. $250,000">
+        </div>
+        <div class="dial">
+          <div class="dl">Reversibility</div>
+          <select id="dRev">
+            <option>Reversible (two-way door)</option>
+            <option selected>Hard to reverse</option>
+            <option>Irreversible (one-way door)</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="fl">Scenario-Specific Assumptions <span style="font-weight:400;text-transform:none">(edit any time, then re-convene)</span></label>
+      <div id="assumpList"></div>
+      <button class="addbtn" id="addAssump">＋ Add assumption</button>
+
+      <div class="stale" id="staleBanner">⚠ Assumptions changed since the last session — re-convene the Board to see the updated view.</div>
+      <div class="runrow">
+        <button class="btn primary" id="runQuick">⚡ Quick Take</button>
+        <button class="btn gold" id="runFull">⚖ Full Board Session</button>
+      </div>
+      <button class="btn mini printbtn" id="printBtn">🖨 Print / save board pack as PDF</button>
+      <div class="foot-note">Members are perspectives modeled on public records — not the actual individuals. Output is decision support, not professional advice.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="err" id="errBox"></div>
+    <div class="status" id="statusBox"></div>
+    <div id="results">
+      <div class="empty">
+        <div class="seal">B</div>
+        <div class="serif" style="font-size:18px;color:var(--navy)">The Board awaits your submission</div>
+        <div style="margin-top:6px;font-size:13px">Choose an engine mode, describe a decision, set your assumptions, and convene the Board.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Manual exchange modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 class="serif">Offline Board Exchange</h3>
+    <div class="steps"><b>Step 1</b> — Copy the Board instructions below. <b>Step 2</b> — Paste them into any capable AI chat (e.g. claude.ai) and send. <b>Step 3</b> — Copy the AI's full JSON reply and paste it in the second box. <b>Step 4</b> — Render.</div>
+    <label class="fl">Board instructions (copy this)</label>
+    <textarea id="mPrompt" rows="8" readonly></textarea>
+    <div class="mrow"><button class="btn primary" id="mCopy">📋 Copy instructions</button></div>
+    <label class="fl">AI reply (paste JSON here)</label>
+    <textarea id="mResp" rows="7" placeholder='Paste the full reply — the tool will find the JSON in it.'></textarea>
+    <div class="mrow">
+      <button class="btn gold" id="mRender">Render board session</button>
+      <button class="btn" id="mCancel" style="background:#eee">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= ROSTER ================= */
+const MEMBERS = [
+  { id:"buffett", name:"Warren Buffett", initials:"WB", color:"#1b2a4a", role:"Board Chair", vote:true,
+    profile:"Warren Buffett, Board Chair. Capital allocation, governance, temperament. Framework: circle of competence, then moat, then management, then price; margin of safety; avoid leverage; reputation is the ultimate asset; favorite holding period is forever. Voice: folksy, candid, rational. Signature questions: 'Would you buy the whole business at this price?' 'What does it look like in 10 years?' 'Are you risking what you need for what you don't need?' Objects to: complexity, leverage, the institutional imperative. Self-admitted gap: early-stage technology." },
+  { id:"dangote", name:"Aliko Dangote", initials:"AD", color:"#7a1f1f", role:"Vice Chair", vote:true,
+    profile:"Aliko Dangote, Vice Chair. Industrial execution at scale, vertical integration, frontier markets. Framework: control the value chain; build to dominant scale; commit to 10-20 year paybacks; persist through delays (cement, the Dangote Refinery). Voice: operational detail, unit economics, quiet persistence. Signature questions: 'What's the unit cost at full scale?' 'Who controls your inputs?' 'What's the plan when it runs three years late?' Objects to: small thinking, import/middleman dependence, quitting before scale economics arrive." },
+  { id:"otedola", name:"Femi Otedola", initials:"FO", color:"#0e5a4e", role:"Voting Director", vote:true,
+    profile:"Femi Otedola, Voting Director. Deals, exits, capital recycling, energy and African capital markets. Framework: sell into strength, buy into neglect; concentrate on conviction (Zenon to Forte Oil exit to Geregu Power and bank stakes); respect macro/FX risk, shaped by surviving the 2008-09 crash. Voice: deal-led, decisive, low-frequency high-signal. Signature questions: 'What's the exit?' 'Who's on the other side of this trade?' 'What if the currency or commodity moves against you?' Objects to: overpaying, illiquidity, sentimental holding of declining assets." },
+  { id:"selman", name:"Apostle Joshua Selman", initials:"JS", color:"#5b3a8c", role:"Strategic Advisor — Purpose & Ethics", vote:false,
+    profile:"Apostle Joshua Selman, Strategic Advisor for purpose, ethics and personal mastery (non-voting). Framework: purpose-first decisions; spiritual capital — honor, diligence, mentorship, excellence, delayed gratification. Voice: systematic teacher, patient. Signature questions: 'Why do you want this?' 'What will it cost you in character, family, and health?' 'Who is mentoring you through it?' Objects to: speed over preparation, success without structure, gains that compromise integrity. Not a source for financial or technical judgment — keep his input on purpose, ethics, people." },
+  { id:"adeboye", name:"Pastor E. A. Adeboye", initials:"EA", color:"#3d5a1f", role:"Strategic Advisor — Scale & Succession", vote:false,
+    profile:"Pastor E. A. Adeboye, Strategic Advisor for organizational scale, culture and succession (non-voting). Framework: decentralized multiplication scaling (RCCG's global parish network), leadership pipelines, planned succession; mathematician's precision (PhD applied mathematics). Voice: quiet authority, story-driven, precise. Signature questions: 'Who runs this when you're gone?' 'Can the model replicate without you in the room?' 'Will the culture survive the growth?' Objects to: founder-centric design, growth without a leadership pipeline." },
+  { id:"rockefeller", name:"John D. Rockefeller", initials:"JR", color:"#5c4a1e", role:"Strategic Advisor — Cost & Consolidation (Historical)", vote:false,
+    profile:"John D. Rockefeller, Strategic Advisor for cost discipline, consolidation and philanthropy (historical, non-voting). Framework: ledger-level cost discipline, counter-cyclical consolidation, waste and by-product monetization, low debt, systematic philanthropy. Voice: reticent, numbers-first, brief. Signature questions: 'What does it cost, exactly?' 'Why compete when you can combine?' 'What are you doing with the waste?' CONSTRAINT: his era's competitive tactics (rebates, predatory pricing) are unlawful today — give only input compatible with modern law and ethics." },
+  { id:"kiyosaki", name:"Robert Kiyosaki", initials:"RK", color:"#8c2f5b", role:"Observer — Contrarian Stress-Test", vote:false,
+    profile:"Robert Kiyosaki, Observer for financial education and contrarian stress-testing (non-voting). Framework: cash flow over capital gains; assets vs liabilities; Cashflow Quadrant; deliberate contrarian on debt, fiat currency, hard assets. Voice: blunt, slogan-driven, provocative. Signature questions: 'Is this an asset or a liability?' 'What's your cash flow if you stop working tomorrow?' CONSTRAINT: his macro predictions have a poor public track record and his leverage advocacy is risky — his role is provocation and stress-testing, flagged as such, never the final word." }
+];
+
+const INTEGRITY = "Integrity rules: reason only from this person's public record (books, letters, interviews, documented decisions). Never fabricate private thoughts or confidential information. This is a perspective modeled on public records, not the actual person. If the scenario falls outside their documented expertise, say so briefly rather than improvising authority.";
+const DEFAULT_CTX = "The decision-maker is the Executive Head of the business and holds final decision authority. They are based in Canada, but all decisions are assessed with a GLOBAL outlook — do not default to a single-country frame. All monetary figures are in USD ($). The Board advises; the Executive Head decides.";
+
+/* ================= STATE ================= */
+const LS_KEY = "bod_standalone_v1";
+let store = load();
+let currentId = store.lastId || null;
+let running = false;
+
+function load(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || fresh(); } catch(e){ return fresh(); } }
+function fresh(){ return {scenarios:{}, lastId:null, settings:{mode:null, apiKey:"", model:"claude-sonnet-4-6", context:DEFAULT_CTX}}; }
+function persist(){ store.lastId = currentId; localStorage.setItem(LS_KEY, JSON.stringify(store)); }
+function uid(){ return "s" + Date.now().toString(36); }
+if(!store.settings) store.settings = fresh().settings;
+if(!store.settings.context) store.settings.context = DEFAULT_CTX;
+
+/* ================= ROSTER STRIP ================= */
+const strip = document.getElementById("rosterStrip");
+MEMBERS.forEach(m => {
+  const d = document.createElement("div"); d.className = "chip";
+  d.innerHTML = '<span class="av" style="background:' + m.color + '">' + m.initials + '</span>' +
+    '<span><div class="nm">' + m.name + '</div><div class="rl">' + m.role + (m.vote ? " · votes" : "") + '</div></span>';
+  strip.appendChild(d);
+});
+
+/* ================= ENGINE SETTINGS ================= */
+const $ = id => document.getElementById(id);
+function setMode(m){
+  store.settings.mode = m; persist();
+  $("modeApi").classList.toggle("active", m==="api");
+  $("modeManual").classList.toggle("active", m==="manual");
+  $("apiFields").style.display = m==="api" ? "block" : "none";
+  $("manualNote").style.display = m==="manual" ? "block" : "none";
+}
+$("modeApi").onclick=()=>setMode("api");
+$("modeManual").onclick=()=>setMode("manual");
+$("sKey").addEventListener("input",()=>{ store.settings.apiKey=$("sKey").value.trim(); persist(); });
+$("sModel").addEventListener("change",()=>{ store.settings.model=$("sModel").value; persist(); });
+
+/* ================= FORM <-> STATE ================= */
+const fields = ["fTitle","fDesc","fObj","fCon","dCapital"];
+function blankScenario(){
+  return { title:"", desc:"", obj:"", con:"", horizon:5, risk:"Balanced", capital:"", rev:"Hard to reverse",
+           assumptions:["",""], result:null, staleSince:null };
+}
+function readForm(){
+  const s = store.scenarios[currentId]; if(!s) return;
+  s.title=$("fTitle").value; s.desc=$("fDesc").value; s.obj=$("fObj").value; s.con=$("fCon").value;
+  s.horizon=+$("dHorizon").value; s.risk=$("dRisk").value; s.capital=$("dCapital").value; s.rev=$("dRev").value;
+  s.assumptions=[...document.querySelectorAll("#assumpList input")].map(i=>i.value);
+  store.settings.context=$("fCtx").value;
+  persist();
+}
+function writeForm(){
+  const s = store.scenarios[currentId];
+  $("fTitle").value=s.title; $("fDesc").value=s.desc; $("fObj").value=s.obj; $("fCon").value=s.con;
+  $("fCtx").value=store.settings.context;
+  $("dHorizon").value=s.horizon; $("dHorizonV").textContent=s.horizon;
+  $("dRisk").value=s.risk; $("dCapital").value=s.capital; $("dRev").value=s.rev;
+  renderAssumps(s); renderResult(s); updateStale();
+}
+function renderAssumps(s){
+  const box=$("assumpList"); box.innerHTML="";
+  s.assumptions.forEach((a,i)=>{
+    const row=document.createElement("div"); row.className="assump-row";
+    const inp=document.createElement("input"); inp.type="text"; inp.value=a;
+    inp.placeholder = i===0 ? "e.g. Demand grows 15%/yr" : "e.g. USD/CAD stays within ±8%";
+    inp.addEventListener("input",()=>{ readForm(); markStale(); });
+    const x=document.createElement("button"); x.className="xbtn"; x.textContent="×";
+    x.onclick=()=>{ s.assumptions.splice(i,1); persist(); renderAssumps(s); markStale(); };
+    row.append(inp,x); box.appendChild(row);
+  });
+}
+function markStale(){
+  const s=store.scenarios[currentId];
+  if(s && s.result){ s.staleSince = Date.now(); persist(); updateStale(); }
+}
+function updateStale(){
+  const s=store.scenarios[currentId];
+  $("staleBanner").classList.toggle("show", !!(s && s.result && s.staleSince));
+}
+
+/* ================= SCENARIO MANAGER ================= */
+function refreshScenSelect(){
+  const sel=$("scenSelect"); sel.innerHTML="";
+  Object.entries(store.scenarios).forEach(([id,s])=>{
+    const o=document.createElement("option"); o.value=id;
+    o.textContent = s.title ? s.title.slice(0,48) : "(untitled scenario)";
+    sel.appendChild(o);
+  });
+  sel.value=currentId;
+}
+$("scenSelect").addEventListener("change", e=>{ readFormSafe(); currentId=e.target.value; persist(); writeForm(); });
+$("newScen").onclick=()=>{ readFormSafe(); const id=uid(); store.scenarios[id]=blankScenario(); currentId=id; persist(); refreshScenSelect(); writeForm(); };
+$("delScen").onclick=()=>{
+  delete store.scenarios[currentId];
+  const ids=Object.keys(store.scenarios);
+  currentId = ids[0] || null;
+  if(!currentId){ const id=uid(); store.scenarios[id]=blankScenario(); currentId=id; }
+  persist(); refreshScenSelect(); writeForm();
+};
+function readFormSafe(){ if(currentId && store.scenarios[currentId]) readForm(); }
+
+fields.forEach(id=>$(id).addEventListener("input",()=>{ readForm(); if(id!=="fTitle") markStale(); if(id==="fTitle") refreshScenSelect(); }));
+$("fCtx").addEventListener("input",()=>{ readForm(); markStale(); });
+$("dHorizon").addEventListener("input",()=>{ $("dHorizonV").textContent=$("dHorizon").value; readForm(); markStale(); });
+["dRisk","dRev"].forEach(id=>$(id).addEventListener("change",()=>{ readForm(); markStale(); }));
+$("addAssump").onclick=()=>{ const s=store.scenarios[currentId]; s.assumptions.push(""); persist(); renderAssumps(s); };
+$("printBtn").onclick=()=>window.print();
+
+/* ================= PROMPTS ================= */
+function scenarioText(){
+  const s=store.scenarios[currentId];
+  const assumps=s.assumptions.filter(a=>a.trim()).map((a,i)=>(i+1)+". "+a).join("\n") || "(none stated)";
+  return "EXECUTIVE CONTEXT: " + (store.settings.context||DEFAULT_CTX) +
+    "\n\nDECISION TITLE: " + (s.title||"(untitled)") +
+    "\n\nSITUATION & DECISION:\n" + (s.desc||"(not provided)") +
+    "\n\nOBJECTIVES: " + (s.obj||"(not stated)") +
+    "\nCONSTRAINTS: " + (s.con||"(not stated)") +
+    "\n\nWORKING ASSUMPTIONS (set by the Executive Head, treat as the operative planning baseline):" +
+    "\n- Time horizon: " + s.horizon + " years" +
+    "\n- Risk tolerance: " + s.risk +
+    "\n- Capital at stake (USD): " + (s.capital||"(unspecified)") +
+    "\n- Reversibility: " + s.rev +
+    "\nScenario-specific assumptions:\n" + assumps;
+}
+function memberPrompt(m){
+  return "You are simulating the perspective of " + m.name + " as a member of the Executive Head's personal Board of Directors.\n" +
+  "PROFILE: " + m.profile + "\n" + INTEGRITY + "\n\n" +
+  "The Executive Head submits this scenario:\n\n" + scenarioText() + "\n\n" +
+  "Give YOUR independent board review, strictly in this member's documented voice and framework. Anchor your reasoning to the stated working assumptions; if you believe an assumption is fragile, say which one and why. Quote money in USD.\n" +
+  "Respond with ONLY valid JSON, no markdown fences, exactly this shape:\n" +
+  '{"reaction":"2-3 sentences, first person, in voice","opportunities":["2-3 items"],"concerns":["2-3 items"],"questions":["2-3 critical questions"],"risks":["1-2 overlooked risks"],"actions":["2-3 recommended actions"],"confidence":<integer 0-100>}';
+}
+function synthesisPrompt(memberOutputs){
+  const views = memberOutputs.map(o=>"--- "+o.name+" ("+o.role+(o.vote?", VOTING":", non-voting")+") ---\n"+JSON.stringify(o.data)).join("\n");
+  return "You are the Chair (Warren Buffett's perspective) synthesizing a board session for the Executive Head.\n" + INTEGRITY + "\n\nSCENARIO:\n" + scenarioText() +
+  "\n\nINDEPENDENT MEMBER REVIEWS:\n" + views + "\n\n" +
+  "Run the debate and produce the consensus and Chairman's Report. Voting members (Buffett, Dangote, Otedola) carry decision weight; advisors shape framing; Kiyosaki provokes (his claims need a counter-review). Name members when citing views. If everyone agrees, appoint a devil's advocate. Money in USD.\n" +
+  "Respond with ONLY valid JSON, no markdown fences, exactly this shape:\n" + SYNTH_SHAPE;
+}
+const SYNTH_SHAPE = '{"debate":{"agreements":["..."],"disagreements":["..."],"hiddenAssumptions":["..."],"tradeoffs":["..."],"secondOrder":["..."]},' +
+  '"consensus":{"majority":"...","minority":"...","conditions":["..."],"earlyWarnings":["..."],"contingencies":["..."]},' +
+  '"chairman":{"summary":"3-4 sentences in Buffett voice","decisionScore":1,"riskScore":1,"alignmentScore":1,"probabilityOfSuccess":"e.g. 55-65%","recommendation":"one or two sentences","nextActions":["3-4 items"],"plan30":"...","plan90":"...","outlook12":"..."}}';
+function quickPrompt(){
+  const profs = MEMBERS.map(m=>"- "+m.profile).join("\n");
+  return "Simulate the Executive Head's Board of Directors giving a QUICK TAKE. Members:\n" + profs + "\n" + INTEGRITY +
+  "\n\nSCENARIO:\n" + scenarioText() +
+  "\n\nEach member gives one tight, distinct paragraph in their own documented voice, anchored to the working assumptions (money in USD). Then a three-line chair summary (Buffett voice).\n" +
+  "Respond with ONLY valid JSON, no markdown fences:\n" +
+  '{"takes":[{"name":"Warren Buffett","take":"...","confidence":50},{"name":"Aliko Dangote","take":"...","confidence":50},{"name":"Femi Otedola","take":"...","confidence":50},{"name":"Apostle Joshua Selman","take":"...","confidence":50},{"name":"Pastor E. A. Adeboye","take":"...","confidence":50},{"name":"John D. Rockefeller","take":"...","confidence":50},{"name":"Robert Kiyosaki","take":"...","confidence":50}],"chairSummary":"three short lines separated by \\n"}';
+}
+function fullCombinedPrompt(){
+  const profs = MEMBERS.map(m=>'"'+m.id+'" = '+m.profile).join("\n");
+  return "Simulate a FULL session of the Executive Head's Board of Directors. Members (keyed by id):\n" + profs + "\n" + INTEGRITY +
+  "\n\nSCENARIO:\n" + scenarioText() +
+  "\n\nProcess: (1) each member reviews independently in their own documented voice; (2) the Board debates; (3) consensus; (4) Chairman's Report in Buffett's voice. Voting members: buffett, dangote, otedola. Kiyosaki provokes and needs counter-review. Anchor to the working assumptions; money in USD. If all agree, appoint a devil's advocate.\n" +
+  "Respond with ONLY valid JSON, no markdown fences, exactly this shape:\n" +
+  '{"members":{"buffett":MR,"dangote":MR,"otedola":MR,"selman":MR,"adeboye":MR,"rockefeller":MR,"kiyosaki":MR},' +
+  '"debate":{"agreements":["..."],"disagreements":["..."],"hiddenAssumptions":["..."],"tradeoffs":["..."],"secondOrder":["..."]},' +
+  '"consensus":{"majority":"...","minority":"...","conditions":["..."],"earlyWarnings":["..."],"contingencies":["..."]},' +
+  '"chairman":{"summary":"3-4 sentences","decisionScore":1,"riskScore":1,"alignmentScore":1,"probabilityOfSuccess":"...","recommendation":"...","nextActions":["..."],"plan30":"...","plan90":"...","outlook12":"..."}}' +
+  '\nwhere MR = {"reaction":"2-3 sentences first person","opportunities":["..."],"concerns":["..."],"questions":["..."],"risks":["..."],"actions":["..."],"confidence":50}';
+}
+
+/* ================= ENGINES ================= */
+async function apiCall(prompt, maxTokens){
+  const st=store.settings;
+  if(!st.apiKey) throw new Error("Enter your Anthropic API key in the Board Engine panel (or switch to offline copy/paste mode).");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "content-type":"application/json", "x-api-key":st.apiKey,
+      "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+    body: JSON.stringify({ model:st.model, max_tokens:maxTokens||4000, messages:[{role:"user",content:prompt}] })
+  });
+  if(!res.ok){ const t=await res.text(); throw new Error("API error "+res.status+": "+t.slice(0,180)); }
+  const j = await res.json();
+  return parseAI((j.content&&j.content[0]&&j.content[0].text)||"");
+}
+function parseAI(t){
+  t = String(t).trim().replace(/^```(json)?/i,"").replace(/```$/,"").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if(a === -1 || b === -1) throw new Error("No JSON found in the reply.");
+  return JSON.parse(t.slice(a, b+1));
+}
+
+/* Manual modal */
+let manualCb = null;
+function openManual(prompt, cb){
+  manualCb = cb;
+  $("mPrompt").value = prompt; $("mResp").value = "";
+  $("modalBg").classList.add("show");
+}
+$("mCopy").onclick=async()=>{
+  try{ await navigator.clipboard.writeText($("mPrompt").value); $("mCopy").textContent="✓ Copied"; }
+  catch(e){ $("mPrompt").select(); document.execCommand("copy"); $("mCopy").textContent="✓ Copied"; }
+  setTimeout(()=>$("mCopy").textContent="📋 Copy instructions",1800);
+};
+$("mCancel").onclick=()=>{ $("modalBg").classList.remove("show"); manualCb=null; setRunning(false); setStatus(""); };
+$("mRender").onclick=()=>{
+  try{
+    const data = parseAI($("mResp").value);
+    $("modalBg").classList.remove("show");
+    if(manualCb) manualCb(data); manualCb=null;
+  }catch(e){ alert("Couldn't read that reply: "+e.message+"\nPaste the AI's complete JSON answer."); }
+};
+
+/* ================= RUN ================= */
+function setStatus(msg){ const el=$("statusBox"); if(msg){ el.textContent=msg; el.classList.add("show"); } else el.classList.remove("show"); }
+function setErr(msg){ const el=$("errBox"); if(msg){ el.textContent=msg; el.classList.add("show"); } else el.classList.remove("show"); }
+function setRunning(v){ running=v; $("runQuick").disabled=v; $("runFull").disabled=v; }
+function validate(){
+  if(!store.settings.mode){ setErr("Choose a Board Engine first: API key or offline copy/paste."); return false; }
+  const s=store.scenarios[currentId];
+  if(!s.desc.trim()){ setErr("Describe the situation and decision before convening the Board."); return false; }
+  setErr(""); return true;
+}
+
+$("runQuick").onclick=async()=>{
+  readForm(); if(!validate()||running) return;
+  const s=store.scenarios[currentId];
+  const done=data=>{ s.result={type:"quick",data}; s.staleSince=null; persist(); renderResult(s); updateStale(); setStatus(""); setRunning(false); };
+  setRunning(true);
+  if(store.settings.mode==="manual"){ setStatus("Offline exchange in progress…"); openManual(quickPrompt(), done); return; }
+  setStatus("⚡ Quick take — the Board is reviewing your submission…");
+  try{ done(await apiCall(quickPrompt(), 6000)); }
+  catch(e){ setErr("Quick take failed: "+e.message); setStatus(""); setRunning(false); }
+};
+
+$("runFull").onclick=async()=>{
+  readForm(); if(!validate()||running) return;
+  const s=store.scenarios[currentId];
+  setRunning(true);
+  if(store.settings.mode==="manual"){
+    setStatus("Offline exchange in progress…");
+    openManual(fullCombinedPrompt(), data=>{
+      s.result={type:"full", members:data.members||{}, synthesis:{debate:data.debate,consensus:data.consensus,chairman:data.chairman}};
+      s.staleSince=null; persist(); renderResult(s); updateStale(); setStatus(""); setRunning(false);
+    });
+    return;
+  }
+  s.result={type:"full",members:{},synthesis:null}; persist(); renderResult(s);
+  let done=0; const outs=[];
+  setStatus("Phase 2 — members deliberating independently (0/" + MEMBERS.length + ")…");
+  await Promise.all(MEMBERS.map(async m=>{
+    try{
+      const data = await apiCall(memberPrompt(m), 3000);
+      s.result.members[m.id]=data; outs.push({name:m.name,role:m.role,vote:m.vote,data});
+    }catch(e){ s.result.members[m.id]={error:e.message}; }
+    done++; setStatus("Phase 2 — members deliberating independently ("+done+"/"+MEMBERS.length+")…");
+    persist(); renderResult(s);
+  }));
+  if(outs.length){
+    setStatus("Phases 3–5 — debate, consensus, and the Chairman's Report…");
+    try{ s.result.synthesis = await apiCall(synthesisPrompt(outs), 6000); }
+    catch(e){ s.result.synthesisError = e.message; }
+  } else { setErr("All member reviews failed — check your API key and re-convene."); }
+  s.staleSince=null; persist(); renderResult(s); updateStale(); setStatus("");
+  setRunning(false);
+};
+
+/* ================= RENDER ================= */
+function esc(x){ const d=document.createElement("div"); d.textContent=x==null?"":String(x); return d.innerHTML; }
+function list(title, arr){
+  if(!arr || !arr.length) return "";
+  return '<div class="klist"><div class="kt">'+title+'</div><ul>'+arr.map(i=>"<li>"+esc(i)+"</li>").join("")+"</ul></div>";
+}
+function confBar(c){
+  c = Math.max(0, Math.min(100, +c||0));
+  return '<div class="conf"><div class="bar"><div class="fill" style="width:'+c+'%"></div></div><div class="ct">Confidence: '+c+'%</div></div>';
+}
+function memberCard(m, data){
+  let body;
+  if(!data) body = '<div class="skel">Deliberating…</div>';
+  else if(data.error) body = '<div class="skel" style="color:var(--red)">Review failed: '+esc(data.error)+'</div>';
+  else body =
+    '<div class="reaction">“'+esc(data.reaction)+'”</div>' +
+    list("Opportunities", data.opportunities) + list("Concerns", data.concerns) +
+    list("Critical questions", data.questions) + list("Overlooked risks", data.risks) +
+    list("Recommended actions", data.actions) + confBar(data.confidence);
+  return '<div class="mcard" style="--mc:'+m.color+'"><div class="mhead">' +
+    '<div class="av" style="background:'+m.color+'">'+m.initials+'</div>' +
+    '<div><div class="mname">'+m.name+'</div><div class="mrole">'+m.role+(m.vote?" · voting":"")+'</div></div></div>'+body+'</div>';
+}
+function scoreCell(label, val, invert){
+  const v=Math.max(1,Math.min(10,+val||0));
+  const good = invert ? v<=4 : v>=7;
+  const bad  = invert ? v>=7 : v<=4;
+  const col = good ? "var(--green)" : bad ? "var(--red)" : "var(--amber)";
+  return '<div class="score"><div class="sv">'+v+'<span style="font-size:12px;color:var(--mut)">/10</span></div><div class="sl">'+label+'</div><div class="sbar"><div class="sfill" style="width:'+(v*10)+'%;background:'+col+'"></div></div></div>';
+}
+function blk(title, content){ return '<div class="blk"><div class="kt">'+title+'</div>'+content+'</div>'; }
+function ul(arr){ return (arr&&arr.length) ? "<ul>"+arr.map(i=>"<li>"+esc(i)+"</li>").join("")+"</ul>" : "<p>—</p>"; }
+
+function renderResult(s){
+  const R=$("results");
+  if(!s || !s.result) return;
+  let html = "";
+  if(s.result.type==="quick" && s.result.data){
+    const d=s.result.data;
+    html += '<div class="phase-tag">Quick Take</div><div class="members-grid">';
+    (d.takes||[]).forEach(t=>{
+      const m = MEMBERS.find(x=>x.name===t.name) || {initials:"?",color:"#888",name:t.name,role:"",vote:false};
+      html += '<div class="mcard" style="--mc:'+m.color+'"><div class="mhead"><div class="av" style="background:'+m.color+'">'+m.initials+'</div><div><div class="mname">'+esc(m.name)+'</div><div class="mrole">'+m.role+'</div></div></div><div class="reaction">“'+esc(t.take)+'”</div>'+confBar(t.confidence)+'</div>';
+    });
+    html += '</div>';
+    if(d.chairSummary) html += '<div class="section chair"><h3>Chair\'s Summary</h3><div class="verdict" style="white-space:pre-line">'+esc(d.chairSummary)+'</div></div>';
+  }
+  if(s.result.type==="full"){
+    html += '<div class="phase-tag">Phase 2 — Independent Member Reviews</div><div class="members-grid">';
+    MEMBERS.forEach(m=>{ html += memberCard(m, s.result.members[m.id]); });
+    html += '</div>';
+    const syn=s.result.synthesis;
+    if(s.result.synthesisError) html += '<div class="err show" style="margin-top:14px">Synthesis failed: '+esc(s.result.synthesisError)+'</div>';
+    if(syn){
+      const db=syn.debate||{}, cs=syn.consensus||{}, ch=syn.chairman||{};
+      html += '<div class="section"><div class="phase-tag">Phase 3 — Board Debate</div><div class="two-col">' +
+        blk("Agreements", ul(db.agreements)) + blk("Disagreements", ul(db.disagreements)) +
+        blk("Hidden assumptions surfaced", ul(db.hiddenAssumptions)) + blk("Trade-offs", ul(db.tradeoffs)) +
+        '</div>' + blk("Second-order consequences", ul(db.secondOrder)) + '</div>';
+      html += '<div class="section"><div class="phase-tag">Phase 4 — Consensus Review</div>' +
+        blk("Majority recommendation", "<p>"+esc(cs.majority)+"</p>") +
+        blk("Minority viewpoint", "<p>"+esc(cs.minority)+"</p>") +
+        '<div class="two-col" style="margin-top:8px">' +
+        blk("Conditions for success", ul(cs.conditions)) + blk("Early-warning indicators", ul(cs.earlyWarnings)) +
+        '</div>' + blk("Contingency plans", ul(cs.contingencies)) + '</div>';
+      html += '<div class="section chair"><div class="phase-tag" style="background:var(--gold)">Phase 5 — Chairman\'s Report</div>' +
+        '<p class="serif" style="font-size:14.5px;margin:8px 0">'+esc(ch.summary)+'</p>' +
+        '<div class="scores">' + scoreCell("Decision Score", ch.decisionScore,false) + scoreCell("Risk Score", ch.riskScore,true) +
+        scoreCell("Strategic Alignment", ch.alignmentScore,false) +
+        '<div class="score"><div class="sv" style="font-size:17px;padding-top:5px">'+esc(ch.probabilityOfSuccess||"—")+'</div><div class="sl">Probability of Success</div></div></div>' +
+        '<div class="verdict">⚖ '+esc(ch.recommendation)+'</div>' +
+        blk("Immediate next actions", ul(ch.nextActions)) +
+        '<div class="plans"><div class="plan"><div class="pt">30-Day Plan</div>'+esc(ch.plan30)+'</div>' +
+        '<div class="plan"><div class="pt">90-Day Plan</div>'+esc(ch.plan90)+'</div>' +
+        '<div class="plan"><div class="pt">12-Month Outlook</div>'+esc(ch.outlook12)+'</div></div></div>';
+    }
+  }
+  if(html) R.innerHTML = html;
+}
+
+/* ================= INIT ================= */
+if(!currentId || !store.scenarios[currentId]){
+  const id=uid(); store.scenarios[id]=blankScenario(); currentId=id; persist();
+}
+$("sKey").value = store.settings.apiKey || "";
+$("sModel").value = store.settings.model || "claude-sonnet-4-6";
+if(store.settings.mode) setMode(store.settings.mode);
+refreshScenSelect(); writeForm();
+</script>
+</body>
+</html>
